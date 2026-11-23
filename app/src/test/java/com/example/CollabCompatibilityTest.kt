@@ -174,4 +174,41 @@ class CollabCompatibilityTest {
     assertTrue("New Note Priority" in cats)
     assertTrue("New Note Fields" in cats)
   }
+
+  @Test
+  fun analyzeCompatibility_acceptsWebPayloadIdWithoutFalsePositives() {
+    val board =
+      CollabBoard(
+        id = "board_sync",
+        ownerId = "u1",
+        title = "testing sync across devices",
+        inviteCode = "SYNC99",
+        schemaVersion = 1L,
+        sourcePlatform = "web",
+      )
+    val elements =
+      listOf(
+        BoardElement(
+          id = "n_1",
+          kind = "node",
+          payload = mapOf("id" to "n_1", "x" to 0.0, "y" to 0.0, "text" to "Node"),
+          sourcePlatform = "web",
+        ),
+        BoardElement(
+          id = "e_1",
+          kind = "edge",
+          payload = mapOf("id" to "e_1", "fromId" to "n_1", "toId" to "n_2"),
+          sourcePlatform = "web",
+        ),
+        BoardElement(
+          id = "s_1",
+          kind = "sticky",
+          payload = mapOf("id" to "s_1", "x" to 50.0, "y" to 50.0, "text" to "Note"),
+          sourcePlatform = "web",
+        ),
+      )
+
+    val report = CollabElementMapper.analyzeCompatibility(board, elements, emptyList())
+    assertFalse(report.hasFindings)
+  }
 }

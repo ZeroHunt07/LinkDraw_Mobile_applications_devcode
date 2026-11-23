@@ -474,4 +474,80 @@ test("Personal user notes and shared board notes enforce owner/member isolation"
   );
 });
 
+test("Board members can edit Web-created elements and boards missing createdAt or using dot/colon IDs", async () => {
+  await testEnv.withSecurityRulesDisabled(async (context) => {
+    const db = context.firestore();
+    await db.collection("collab_boards").doc("web_board.1").set({
+      ownerId: ALICE_UID,
+      title: "testing sync across devices",
+      memberUids: [ALICE_UID, BOB_UID],
+      schemaVersion: 1,
+      sourcePlatform: "web",
+      updatedAt: pastDate(2000),
+    });
+    await db
+      .collection("collab_boards")
+      .doc("web_board.1")
+      .collection("elements")
+      .doc("node_1.23")
+      .set({
+        kind: "node",
+        payload: { id: "node_1.23", x: 10, y: 20, text: "Web Node" },
+        updatedByUid: ALICE_UID,
+        updatedByName: "Alice",
+        sourcePlatform: "web",
+        updatedAt: pastDate(1000),
+      });
+  });
+
+  const bobDb = testEnv.authenticatedContext(BOB_UID).firestore();
+  const charlieDb = testEnv.authenticatedContext(CHARLIE_UID).firestore();
+
+  // Collaborator Bob can edit Alice's Web-created element even without createdAt and with '.' in ID
+  await assertSucceeds(
+    bobDb
+      .collection("collab_boards")
+      .doc("web_board.1")
+      .collection("elements")
+      .doc("node_1.23")
+      .update({
+        payload: { id: "node_1.23", x: 150, y: 220, text: "Edited on Android" },
+        updatedByUid: BOB_UID,
+        updatedByName: "Bob",
+        schemaVersion: 1,
+        sourcePlatform: "android",
+        updatedAt: pastDate(200),
+      })
+  );
+
+  // Collaborator Bob can toggle board settings even if Web omitted createdAt/memberNames/description
+  await assertSucceeds(
+    bobDb
+      .collection("collab_boards")
+      .doc("web_board.1")
+      .update({
+        gridSnap: false,
+        gridSize: 24,
+        flowAnimation: true,
+        updatedAt: pastDate(100),
+      })
+  );
+
+  // Non-member Charlie is still blocked
+  await assertFails(
+    charlieDb
+      .collection("collab_boards")
+      .doc("web_board.1")
+      .collection("elements")
+      .doc("node_1.23")
+      .update({
+        payload: { id: "node_1.23", x: 999, y: 999, text: "Hacked" },
+        updatedByUid: CHARLIE_UID,
+        updatedByName: "Charlie",
+        updatedAt: pastDate(50),
+      })
+  );
+});
+
+
 

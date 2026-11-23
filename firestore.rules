@@ -25,7 +25,9 @@ service cloud.firestore {
       return id is string &&
              id.size() >= 1 &&
              id.size() <= 128 &&
-             id.matches('^[a-zA-Z0-9_\\-]+$');
+             id != '.' &&
+             id != '..' &&
+             id.matches('^[a-zA-Z0-9_\\-.:@]+$');
     }
 
     function isValidInviteCode(code) {
@@ -50,23 +52,21 @@ service cloud.firestore {
     // 3. Entity Validation Blueprints
     function isValidCollabBoard(data) {
       return data.ownerId is string && data.ownerId.size() >= 1 && data.ownerId.size() <= 128 &&
-             data.ownerName is string && data.ownerName.size() >= 1 && data.ownerName.size() <= 80 &&
+             (!('ownerName' in data) || (data.ownerName is string && data.ownerName.size() >= 1 && data.ownerName.size() <= 80)) &&
              data.title is string && data.title.size() >= 1 && data.title.size() <= 120 &&
-             data.description is string && data.description.size() <= 300 &&
-             isValidInviteCode(data.inviteCode) &&
+             (!('description' in data) || (data.description is string && data.description.size() <= 300)) &&
+             (!('inviteCode' in data) || (data.inviteCode is string && data.inviteCode.size() >= 4 && data.inviteCode.size() <= 24)) &&
              data.memberUids is list &&
              data.memberUids.size() >= 1 &&
              data.memberUids.size() <= 20 &&
              data.memberUids[0] is string &&
              data.ownerId in data.memberUids &&
-             data.memberNames is map &&
-             data.memberNames.size() >= 1 &&
-             data.memberNames.size() <= 20 &&
-             data.gridSnap is bool &&
-             data.gridSize is number && data.gridSize >= 8 && data.gridSize <= 96 &&
-             data.flowAnimation is bool &&
-             (!('extensions' in data) || (data.extensions is map && data.extensions.size() <= 40)) &&
-             (!('schemaVersion' in data) || (data.schemaVersion is int && data.schemaVersion >= 1)) &&
+             (!('memberNames' in data) || (data.memberNames is map && data.memberNames.size() <= 20)) &&
+             (!('gridSnap' in data) || data.gridSnap is bool) &&
+             (!('gridSize' in data) || (data.gridSize is number && data.gridSize >= 4 && data.gridSize <= 200)) &&
+             (!('flowAnimation' in data) || data.flowAnimation is bool) &&
+             (!('extensions' in data) || (data.extensions is map && data.extensions.size() <= 60)) &&
+             (!('schemaVersion' in data) || (data.schemaVersion is number && data.schemaVersion >= 1)) &&
              (!('sourcePlatform' in data) || (data.sourcePlatform is string && data.sourcePlatform.size() >= 1 && data.sourcePlatform.size() <= 24));
     }
 
@@ -79,10 +79,10 @@ service cloud.firestore {
     function isValidBoardElement(data) {
       return data.kind is string && data.kind.size() >= 1 && data.kind.size() <= 40 &&
              data.kind.matches('^[a-zA-Z0-9_\\-]+$') &&
-             data.payload is map && data.payload.size() >= 1 && data.payload.size() <= 80 &&
+             data.payload is map && data.payload.size() >= 1 && data.payload.size() <= 200 &&
              data.updatedByUid is string && data.updatedByUid.size() >= 1 && data.updatedByUid.size() <= 128 &&
              data.updatedByName is string && data.updatedByName.size() >= 1 && data.updatedByName.size() <= 80 &&
-             (!('schemaVersion' in data) || (data.schemaVersion is int && data.schemaVersion >= 1)) &&
+             (!('schemaVersion' in data) || (data.schemaVersion is number && data.schemaVersion >= 1)) &&
              (!('sourcePlatform' in data) || (data.sourcePlatform is string && data.sourcePlatform.size() >= 1 && data.sourcePlatform.size() <= 24));
     }
 
@@ -125,7 +125,7 @@ service cloud.firestore {
              (!('linkedNodeId' in data) || (data.linkedNodeId is string && data.linkedNodeId.size() <= 128)) &&
              (!('linkedNodeName' in data) || (data.linkedNodeName is string && data.linkedNodeName.size() <= 120)) &&
              (!('extensions' in data) || (data.extensions is map && data.extensions.size() <= 40)) &&
-             (!('schemaVersion' in data) || (data.schemaVersion is int && data.schemaVersion >= 1)) &&
+             (!('schemaVersion' in data) || (data.schemaVersion is number && data.schemaVersion >= 1)) &&
              (!('sourcePlatform' in data) || (data.sourcePlatform is string && data.sourcePlatform.size() >= 1 && data.sourcePlatform.size() <= 24));
     }
 
@@ -160,8 +160,8 @@ service cloud.firestore {
                        isValidId(boardId) &&
                        isValidCollabBoard(incoming()) &&
                        incoming().ownerId == existing().ownerId &&
-                       incoming().inviteCode == existing().inviteCode &&
-                       incoming().createdAt == existing().createdAt &&
+                       (!('inviteCode' in existing()) || incoming().inviteCode == existing().inviteCode) &&
+                       (!('createdAt' in existing()) || incoming().createdAt == existing().createdAt) &&
                        incoming().updatedAt is timestamp && incoming().updatedAt <= request.time &&
                        (
                          // Action 1: Owner edits board metadata, settings, extensions, or member roster
@@ -236,8 +236,8 @@ service cloud.firestore {
                          isValidId(boardId) &&
                          isValidId(elementId) &&
                          isValidBoardElement(incoming()) &&
-                         incoming().kind == existing().kind &&
-                         incoming().createdAt == existing().createdAt &&
+                         (!('kind' in existing()) || incoming().kind == existing().kind) &&
+                         (!('createdAt' in existing()) || incoming().createdAt == existing().createdAt) &&
                          incoming().updatedByUid == request.auth.uid &&
                          incoming().updatedAt is timestamp && incoming().updatedAt <= request.time &&
                          incoming().diff(existing()).affectedKeys().hasOnly([
@@ -279,8 +279,8 @@ service cloud.firestore {
                          isValidId(memberUid) &&
                          request.auth.uid == memberUid &&
                          isValidBoardPresence(incoming()) &&
-                         incoming().uid == existing().uid &&
-                         incoming().createdAt == existing().createdAt &&
+                         (!('uid' in existing()) || incoming().uid == existing().uid) &&
+                         (!('createdAt' in existing()) || incoming().createdAt == existing().createdAt) &&
                          incoming().updatedAt is timestamp && incoming().updatedAt <= request.time &&
                          incoming().diff(existing()).affectedKeys().hasOnly([
                            'displayName', 'colorHex', 'selectedNodeId', 'activeTab',
@@ -350,7 +350,7 @@ service cloud.firestore {
                          isValidId(boardId) &&
                          isValidId(noteId) &&
                          isValidCollabNote(incoming()) &&
-                         incoming().createdAt == existing().createdAt &&
+                         (!('createdAt' in existing()) || incoming().createdAt == existing().createdAt) &&
                          incoming().updatedByUid == request.auth.uid &&
                          incoming().updatedAt is timestamp && incoming().updatedAt <= request.time &&
                          incoming().diff(existing()).affectedKeys().hasOnly([
@@ -423,7 +423,7 @@ service cloud.firestore {
                        isValidId(noteId) &&
                        request.auth.uid == userId &&
                        isValidCollabNote(incoming()) &&
-                       incoming().createdAt == existing().createdAt &&
+                       (!('createdAt' in existing()) || incoming().createdAt == existing().createdAt) &&
                        incoming().updatedByUid == request.auth.uid &&
                        incoming().updatedAt is timestamp && incoming().updatedAt <= request.time &&
                        incoming().diff(existing()).affectedKeys().hasOnly([

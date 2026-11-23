@@ -370,13 +370,15 @@ class CollaborationRepository(
 
       for (chunk in ops.chunked(350)) {
         val batch = db.batch()
-        chunk.forEach { (id, kindPair) ->
+        for ((id, kindPair) in chunk) {
           val docRef = elemsCol.document(id)
           if (kindPair == null) {
             batch.delete(docRef)
           } else {
             val (kind, payload) = kindPair
-            if (id in knownRemoteElementIds) {
+            val isExistingDoc =
+              if (id in knownRemoteElementIds) true else docRef.get().awaitTask().exists()
+            if (isExistingDoc) {
               batch.update(
                 docRef,
                 mapOf(
@@ -577,7 +579,8 @@ class CollaborationRepository(
       val cleanNodeId = selectedNodeId?.takeIf { it.isNotBlank() }?.take(128)
       val presRef = db.collection("collab_boards").document(boardId).collection("presence").document(uid)
 
-      if (hasExistingPresence) {
+      val existsOnServer = hasExistingPresence || presRef.get().awaitTask().exists()
+      if (existsOnServer) {
         val updateMap = mutableMapOf<String, Any>(
           "displayName" to cleanName,
           "colorHex" to colorHex,

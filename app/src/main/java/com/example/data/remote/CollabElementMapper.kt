@@ -20,6 +20,7 @@ object CollabElementMapper {
 
   private val KNOWN_NODE_KEYS: Set<String> =
     setOf(
+      "id",
       "x", "left", "posX",
       "y", "top", "posY",
       "w", "width",
@@ -40,6 +41,7 @@ object CollabElementMapper {
 
   private val KNOWN_EDGE_KEYS: Set<String> =
     setOf(
+      "id",
       "fromId", "source", "sourceId", "from", "a",
       "toId", "target", "targetId", "to", "b",
       "label", "text", "title",
@@ -54,6 +56,7 @@ object CollabElementMapper {
 
   private val KNOWN_STICKY_KEYS: Set<String> =
     setOf(
+      "id",
       "x", "left", "posX",
       "y", "top", "posY",
       "w", "width",
@@ -66,6 +69,7 @@ object CollabElementMapper {
 
   private val KNOWN_STROKE_KEYS: Set<String> =
     setOf(
+      "id",
       "points",
       "colorHex", "color", "stroke",
       "width", "strokeWidth",
@@ -82,8 +86,12 @@ object CollabElementMapper {
   }
 
   fun sanitizeElementId(rawId: String, kind: String): String {
-    val cleaned = rawId.replace(Regex("[^a-zA-Z0-9_\\-]"), "_").take(110)
-    return if (cleaned.isNotBlank()) cleaned else "${kind}_${System.currentTimeMillis()}"
+    val cleaned = rawId.replace(Regex("[^a-zA-Z0-9_\\-.:@]"), "_").take(128)
+    return if (cleaned.isNotBlank() && cleaned != "." && cleaned != "..") {
+      cleaned
+    } else {
+      "${kind}_${System.currentTimeMillis()}"
+    }
   }
 
   private fun numVal(p: Map<String, Any>, vararg keys: String): Float? {
@@ -130,6 +138,7 @@ object CollabElementMapper {
       } else {
         n.shape.id
       }
+    map["id"] = n.id
     map["x"] = n.x.toDouble()
     map["y"] = n.y.toDouble()
     map["w"] = n.w.toDouble()
@@ -188,6 +197,7 @@ object CollabElementMapper {
         e.lineStyle.id
       }
 
+    map["id"] = e.id
     map["fromId"] = e.fromId
     map["toId"] = e.toId
     map["label"] = e.label
@@ -205,6 +215,7 @@ object CollabElementMapper {
 
   fun stickyToPayload(s: StickyNote): Map<String, Any> {
     val map = s.extraPayload.toMutableMap()
+    map["id"] = s.id
     map["x"] = s.x.toDouble()
     map["y"] = s.y.toDouble()
     map["w"] = s.w.toDouble()
@@ -222,6 +233,7 @@ object CollabElementMapper {
     val sampled =
       if (st.points.size <= 350) st.points
       else st.points.filterIndexed { index, _ -> index % ((st.points.size / 350) + 1) == 0 }
+    map["id"] = st.id
     map["points"] = sampled.map { pt -> mapOf("x" to pt.x.toDouble(), "y" to pt.y.toDouble()) }
     map["colorHex"] = st.colorHex
     map["width"] = st.width.toDouble()
