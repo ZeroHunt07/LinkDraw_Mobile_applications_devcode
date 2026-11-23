@@ -1,0 +1,11 @@
+<resources>
+    <string name="app_name">LinkDraw</string>
+    <string name="nav_projects">Projects</string>
+    <string name="nav_canvas">Canvas</string>
+    <string name="nav_notes">Notes</string>
+    <string name="nav_utilities">Utilities</string>
+    <string name="auth_title">LinkDraw Studio</string>
+    <string name="auth_subtitle">Collaborative Graph Intelligence, Layouts &amp; Notes</string>
+    <string name="sign_in_google">Sign in with Google</string>
+    <string name="sign_out">Sign Out</string>
+</resources>

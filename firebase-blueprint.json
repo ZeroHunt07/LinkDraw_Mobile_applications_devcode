@@ -1,0 +1,317 @@
+{
+  "entities": {
+    "CollabBoard": {
+      "title": "CollabBoard",
+      "description": "A shared collaborative LinkDraw graph workspace with bounded member list and board settings.",
+      "type": "object",
+      "properties": {
+        "ownerId": {
+          "type": "string",
+          "description": "Firebase Auth UID of the board owner (immutable)."
+        },
+        "ownerName": {
+          "type": "string",
+          "description": "Display name of the board owner."
+        },
+        "title": {
+          "type": "string",
+          "description": "Title of the collaborative graph board (1-120 chars)."
+        },
+        "description": {
+          "type": "string",
+          "description": "Short summary of the collaborative graph board (0-300 chars)."
+        },
+        "inviteCode": {
+          "type": "string",
+          "description": "Uppercase alphanumeric invite code (6-12 chars) referencing /board_invites/{inviteCode}."
+        },
+        "memberUids": {
+          "type": "array",
+          "description": "Bounded list (max 20) of authorized collaborator UIDs including ownerId."
+        },
+        "memberNames": {
+          "type": "object",
+          "description": "Map of collaborator UID to display name (max 20 entries)."
+        },
+        "gridSnap": {
+          "type": "boolean",
+          "description": "Whether canvas grid snapping is enabled."
+        },
+        "gridSize": {
+          "type": "integer",
+          "description": "Grid spacing in dp (8-96)."
+        },
+        "flowAnimation": {
+          "type": "boolean",
+          "description": "Whether marching flow particle animation is enabled on edges."
+        },
+        "extensions": {
+          "type": "object",
+          "description": "Optional forward-compatible map of platform-specific board settings."
+        },
+        "schemaVersion": {
+          "type": "integer",
+          "description": "Optional schema version number (>= 1)."
+        },
+        "sourcePlatform": {
+          "type": "string",
+          "description": "Optional origin platform identifier (android or web)."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when created (FieldValue.serverTimestamp())."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when last updated (FieldValue.serverTimestamp())."
+        }
+      },
+      "required": [
+        "ownerId",
+        "ownerName",
+        "title",
+        "description",
+        "inviteCode",
+        "memberUids",
+        "memberNames",
+        "gridSnap",
+        "gridSize",
+        "flowAnimation",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "BoardInvite": {
+      "title": "BoardInvite",
+      "description": "Direct invite code lookup record pointing to a collaborative board.",
+      "type": "object",
+      "properties": {
+        "boardId": {
+          "type": "string",
+          "description": "Document ID of the target /collab_boards/{boardId}."
+        },
+        "ownerId": {
+          "type": "string",
+          "description": "Firebase Auth UID of the board owner."
+        },
+        "title": {
+          "type": "string",
+          "description": "Title of the invited board."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when invite was generated (FieldValue.serverTimestamp())."
+        }
+      },
+      "required": ["boardId", "ownerId", "title", "createdAt"]
+    },
+    "BoardElement": {
+      "title": "BoardElement",
+      "description": "An individual node, edge, sticky note, or freehand stroke synced natively inside a collaborative board.",
+      "type": "object",
+      "properties": {
+        "kind": {
+          "type": "string",
+          "description": "Element category (core: node, edge, sticky, stroke; extensible for future web/mobile element kinds)."
+        },
+        "payload": {
+          "type": "object",
+          "description": "Native Firestore Map of element attributes (coordinates, styling, tags, metadata, plus forward-compatible custom attributes)."
+        },
+        "updatedByUid": {
+          "type": "string",
+          "description": "UID of the collaborator who last created or updated this element."
+        },
+        "updatedByName": {
+          "type": "string",
+          "description": "Display name of the collaborator who last touched this element."
+        },
+        "schemaVersion": {
+          "type": "integer",
+          "description": "Optional schema version number (>= 1)."
+        },
+        "sourcePlatform": {
+          "type": "string",
+          "description": "Optional origin platform identifier (android or web)."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when created (FieldValue.serverTimestamp())."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when updated (FieldValue.serverTimestamp())."
+        }
+      },
+      "required": [
+        "kind",
+        "payload",
+        "updatedByUid",
+        "updatedByName",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "BoardPresence": {
+      "title": "BoardPresence",
+      "description": "Real-time collaborator presence and selected-node indicator keyed by member UID.",
+      "type": "object",
+      "properties": {
+        "uid": {
+          "type": "string",
+          "description": "Firebase Auth UID matching the document ID."
+        },
+        "displayName": {
+          "type": "string",
+          "description": "Collaborator display name."
+        },
+        "colorHex": {
+          "type": "string",
+          "description": "Accent color hex for collaborator avatar and cursor/selection ring."
+        },
+        "selectedNodeId": {
+          "type": "string",
+          "description": "Optional ID of the node currently focused by this collaborator."
+        },
+        "activeTab": {
+          "type": "string",
+          "description": "Current studio tab (core: canvas, notes, utilities, projects; extensible)."
+        },
+        "cursorX": {
+          "type": "number",
+          "description": "Optional world X coordinate of remote cursor."
+        },
+        "cursorY": {
+          "type": "number",
+          "description": "Optional world Y coordinate of remote cursor."
+        },
+        "viewportZoom": {
+          "type": "number",
+          "description": "Optional remote viewport zoom."
+        },
+        "sourcePlatform": {
+          "type": "string",
+          "description": "Optional origin platform identifier (android or web)."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when presence started (FieldValue.serverTimestamp())."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp heartbeat (FieldValue.serverTimestamp())."
+        }
+      },
+      "required": ["uid", "displayName", "colorHex", "activeTab", "createdAt", "updatedAt"]
+    },
+    "BoardComment": {
+      "title": "BoardComment",
+      "description": "Collaborative team comment or node annotation in a shared board.",
+      "type": "object",
+      "properties": {
+        "authorId": {
+          "type": "string",
+          "description": "Firebase Auth UID of the comment author."
+        },
+        "authorName": {
+          "type": "string",
+          "description": "Display name of the comment author."
+        },
+        "text": {
+          "type": "string",
+          "description": "Comment body text (1-500 chars)."
+        },
+        "linkedNodeId": {
+          "type": "string",
+          "description": "Optional canvas node ID linked to this comment."
+        },
+        "linkedNodeLabel": {
+          "type": "string",
+          "description": "Optional label of the linked canvas node."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when created (FieldValue.serverTimestamp())."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when updated (FieldValue.serverTimestamp())."
+        }
+      },
+      "required": ["authorId", "authorName", "text", "createdAt", "updatedAt"]
+    },
+    "CollabNote": {
+      "title": "CollabNote",
+      "description": "Cloud-synced Document Studio intelligence note (personal or shared board).",
+      "type": "object",
+      "properties": {
+        "projectId": { "type": "string", "description": "Optional associated project ID." },
+        "title": { "type": "string", "description": "Note title (1-200 chars)." },
+        "body": { "type": "string", "description": "Markdown body text." },
+        "noteType": { "type": "string", "description": "Observation, Source, Lead, Analysis, Question, Action, or custom." },
+        "folder": { "type": "string", "description": "Folder name." },
+        "tags": { "type": "array", "description": "List of note tags." },
+        "priority": { "type": "string", "description": "urgent, high, normal, low." },
+        "colorHex": { "type": "string", "description": "Card tint hex color." },
+        "pinned": { "type": "boolean", "description": "Whether note is pinned." },
+        "archived": { "type": "boolean", "description": "Whether note is archived." },
+        "linkedNodeId": { "type": "string", "description": "Optional linked canvas node ID." },
+        "linkedNodeName": { "type": "string", "description": "Optional linked canvas node label." },
+        "sourceUrl": { "type": "string", "description": "Optional reference URL." },
+        "checklist": { "type": "array", "description": "Checklist items [{id, text, checked}]." },
+        "wordCount": { "type": "integer", "description": "Computed word count." },
+        "updatedByUid": { "type": "string", "description": "Last editor Firebase UID." },
+        "updatedByName": { "type": "string", "description": "Last editor display name." },
+        "extensions": { "type": "object", "description": "Forward-compatible custom note fields." },
+        "schemaVersion": { "type": "integer", "description": "Schema version (>= 1)." },
+        "sourcePlatform": { "type": "string", "description": "android or web." },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": [
+        "title", "body", "noteType", "folder", "tags", "priority",
+        "colorHex", "pinned", "archived", "sourceUrl", "checklist",
+        "wordCount", "updatedByUid", "updatedByName", "createdAt", "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/collab_boards/{boardId}": {
+      "schema": { "$ref": "#/entities/CollabBoard" },
+      "description": "Collaborative graph boards accessible only to listed memberUids."
+    },
+    "/board_invites/{inviteCode}": {
+      "schema": { "$ref": "#/entities/BoardInvite" },
+      "description": "Invite code lookup records supporting single-document get by code."
+    },
+    "/collab_boards/{boardId}/elements/{elementId}": {
+      "schema": { "$ref": "#/entities/BoardElement" },
+      "description": "Per-element graph nodes, edges, sticky notes, and strokes for live multi-user sync."
+    },
+    "/collab_boards/{boardId}/presence/{memberUid}": {
+      "schema": { "$ref": "#/entities/BoardPresence" },
+      "description": "Live collaborator presence & node selection indicators."
+    },
+    "/collab_boards/{boardId}/comments/{commentId}": {
+      "schema": { "$ref": "#/entities/BoardComment" },
+      "description": "Live team comments and node-linked annotations."
+    },
+    "/collab_boards/{boardId}/notes/{noteId}": {
+      "schema": { "$ref": "#/entities/CollabNote" },
+      "description": "Live collaborative Document Studio notes linked to a shared board."
+    },
+    "/users/{userId}/notes/{noteId}": {
+      "schema": { "$ref": "#/entities/CollabNote" },
+      "description": "Private cloud-synced Document Studio notes for the signed-in user."
+    }
+  }
+}

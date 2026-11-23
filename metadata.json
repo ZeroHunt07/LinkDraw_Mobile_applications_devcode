@@ -1,0 +1,6 @@
+{
+  "name": "LinkDraw",
+  "description": "Visual graph workspace, network analytics, OSINT transforms, formula sheet, and bi-directional notes studio.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
